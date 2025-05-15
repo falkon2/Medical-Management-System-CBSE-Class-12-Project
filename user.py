@@ -13,7 +13,8 @@ def register_user(username, password, full_name, email, specialization):
         conn.commit()
         return True
     except Exception as e:
-        st.error(f"Registration failed: {e}")
+        # Improve error display with emoji
+        st.error(f"❌ Registration failed: {e}")
         return False
     finally:
         conn.close()

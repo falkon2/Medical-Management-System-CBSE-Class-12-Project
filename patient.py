@@ -1,5 +1,6 @@
 import streamlit as st
 from database import get_db_connection
+from datetime import datetime
 
 def add_patient(name, age, gender, contact, address, medical_history):
     conn = get_db_connection()
@@ -25,6 +26,19 @@ def get_patients():
     cursor.execute("SELECT * FROM patients ORDER BY name")
     patients = cursor.fetchall()
     conn.close()
+    
+    # Format the data for better display
+    for patient in patients:
+        # Add age group for better filtering
+        if patient.get('age'):
+            age = patient['age']
+            if age < 18:
+                patient['age_group'] = 'Child'
+            elif age < 65:
+                patient['age_group'] = 'Adult'
+            else:
+                patient['age_group'] = 'Senior'
+    
     return patients
 
 def get_patient(patient_id):

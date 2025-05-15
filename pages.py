@@ -2,86 +2,167 @@ import streamlit as st
 from user import authenticate_user, register_user
 from patient import add_patient, get_patients, get_patient
 from prescription import add_prescription, get_patient_prescriptions, get_doctor_stats
+import time
 
 def show_login_page():
-    st.title("Doctor's Portal")
+    # Create a centered container for the login form
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    tab1, tab2 = st.tabs(["Login", "Register"])
-    
-    with tab1:
-        st.header("Login")
-        username = st.text_input("Username", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
+    with col2:
+        # Add a logo or image
+        st.image("https://cdn-icons-png.flaticon.com/512/3774/3774299.png", width=150)
+        st.title("Doctor's Portal")
+        st.markdown("##### Your medical management solution")
         
-        if st.button("Login"):
-            if username and password:
-                user = authenticate_user(username, password)
-                if user:
-                    st.session_state.logged_in = True
-                    st.session_state.user = user
-                    st.success("Login successful!")
-                    st.rerun()
-                else:
-                    st.error("Wrong username or password")
-            else:
-                st.warning("Please enter username and password")
-    
-    with tab2:
-        st.header("Register")
-        new_username = st.text_input("Username", key="reg_username")
-        new_password = st.text_input("Password", type="password", key="reg_password")
-        confirm_password = st.text_input("Confirm Password", type="password")
-        full_name = st.text_input("Full Name")
-        email = st.text_input("Email")
-        specialization = st.text_input("Specialization")
+        # Add some space
+        st.markdown("---")
         
-        if st.button("Register"):
-            if new_password != confirm_password:
-                st.error("Passwords don't match")
-            elif not (new_username and new_password and full_name):
-                st.warning("Username, password and name are required")
-            else:
-                if register_user(new_username, new_password, full_name, email, specialization):
-                    st.success("Registration successful! You can now login.")
-                    st.rerun()
+        tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
+        
+        with tab1:
+            st.header("Doctor Login")
+            
+            # Nicer form layout
+            with st.form("login_form"):
+                username = st.text_input("👤 Username")
+                password = st.text_input("🔒 Password", type="password")
+                
+                # Full-width button
+                submit = st.form_submit_button("Login", use_container_width=True)
+                
+                if submit:
+                    if username and password:
+                        # Add a spinner for better UX
+                        with st.spinner("Logging in..."):
+                            time.sleep(0.5)  # Simulate loading
+                            user = authenticate_user(username, password)
+                            if user:
+                                st.session_state.logged_in = True
+                                st.session_state.user = user
+                                st.success("✅ Login successful!")
+                                time.sleep(0.5)
+                                st.rerun()
+                            else:
+                                st.error("❌ Invalid username or password")
+                    else:
+                        st.warning("⚠️ Please enter both username and password")
+        
+        with tab2:
+            st.header("Doctor Registration")
+            
+            # Nicer form layout
+            with st.form("register_form"):
+                new_username = st.text_input("👤 Username")
+                col1, col2 = st.columns(2)
+                with col1:
+                    new_password = st.text_input("🔒 Password", type="password")
+                with col2:
+                    confirm_password = st.text_input("🔒 Confirm Password", type="password")
+                
+                full_name = st.text_input("📋 Full Name")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    email = st.text_input("📧 Email")
+                with col2:
+                    specialization = st.text_input("🔬 Specialization")
+                
+                # Full-width button
+                submit = st.form_submit_button("Register", use_container_width=True)
+                
+                if submit:
+                    if new_password != confirm_password:
+                        st.error("❌ Passwords do not match")
+                    elif not (new_username and new_password and full_name):
+                        st.warning("⚠️ Username, password and name are required")
+                    else:
+                        # Add a spinner for better UX
+                        with st.spinner("Registering..."):
+                            time.sleep(0.5)  # Simulate loading
+                            if register_user(new_username, new_password, full_name, email, specialization):
+                                st.success("✅ Registration successful! You can now login.")
+                                time.sleep(1)
+                                st.rerun()
 
 def show_dashboard():
-    st.title("Dashboard")
+    st.title("📊 Dashboard")
     
-    stats = get_doctor_stats(st.session_state.user['id'])
+    # Add a nicer container for the dashboard
+    with st.container():
+        st.markdown("#### Overview")
+        
+        # Add a spinner while loading stats
+        with st.spinner("Loading stats..."):
+            stats = get_doctor_stats(st.session_state.user['id'])
+        
+        # Display stats with improved visuals
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("👥 Total Patients", stats["patient_count"])
+        with col2:
+            st.metric("💊 Your Prescriptions", stats["prescription_count"])
+        with col3:
+            avg_prescriptions = stats["prescription_count"] / max(1, stats["patient_count"])
+            st.metric("📈 Avg. Prescriptions", f"{avg_prescriptions:.1f}")
     
-    # Display stats
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Total Patients", stats["patient_count"])
-    with col2:
-        st.metric("Your Prescriptions", stats["prescription_count"])
-    
-    # Display recent activity
-    st.subheader("Recent Prescriptions")
-    if stats["recent_prescriptions"]:
-        for rx in stats["recent_prescriptions"]:
-            st.write(f"{rx['prescription_date']}: {rx['patient_name']} - {rx['diagnosis']}")
-    else:
-        st.write("No recent prescriptions")
+    # Add a second container for recent activity
+    with st.container():
+        st.markdown("---")
+        st.subheader("📋 Recent Prescriptions")
+        
+        if stats["recent_prescriptions"]:
+            for i, rx in enumerate(stats["recent_prescriptions"]):
+                # Create a card-like design for each prescription
+                with st.container():
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        st.markdown(f"**{rx['prescription_date'].strftime('%b %d')}**")
+                    with col2:
+                        st.markdown(f"**Patient:** {rx['patient_name']}")
+                        st.markdown(f"**Diagnosis:** {rx['diagnosis']}")
+                    
+                    # Only add separator if not the last item
+                    if i < len(stats["recent_prescriptions"]) - 1:
+                        st.markdown("---")
+        else:
+            st.info("🔍 No recent prescriptions found")
 
 def show_add_patient():
-    st.title("Add New Patient")
+    st.title("➕ Add New Patient")
     
-    name = st.text_input("Patient Name")
-    age = st.number_input("Age", min_value=0, max_value=120, step=1)
-    gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-    contact = st.text_input("Contact Number")
-    address = st.text_area("Address")
-    medical_history = st.text_area("Medical History")
-    
-    if st.button("Add Patient"):
-        if name:
-            if add_patient(name, age, gender, contact, address, medical_history):
-                st.success(f"Patient {name} added successfully!")
-                st.rerun()
-        else:
-            st.warning("Patient name is required")
+    # Create a cleaner form layout
+    with st.form("add_patient_form"):
+        st.markdown("### Patient Information")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            name = st.text_input("Full Name")
+        with col2:
+            age = st.number_input("Age", min_value=0, max_value=120, step=1)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+        with col2:
+            contact = st.text_input("Contact Number")
+        
+        address = st.text_area("Address", height=100)
+        medical_history = st.text_area("Medical History", height=150, 
+                                     placeholder="Enter patient's medical history, allergies, chronic conditions, etc.")
+        
+        # Add a submit button
+        submitted = st.form_submit_button("Add Patient", use_container_width=True)
+        
+        if submitted:
+            if name:
+                with st.spinner("Adding patient..."):
+                    time.sleep(0.5)  # Simulate loading
+                    if add_patient(name, age, gender, contact, address, medical_history):
+                        st.success(f"✅ Patient {name} added successfully!")
+                        time.sleep(1)  # Give time to see the success message
+                        st.rerun()
+            else:
+                st.warning("⚠️ Patient name is required")
 
 def show_view_patients():
     st.title("View Patients")
