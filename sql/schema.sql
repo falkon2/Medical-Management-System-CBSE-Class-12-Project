@@ -1,16 +1,15 @@
--- Create database if it doesn't exist
+-- Create database
 CREATE DATABASE IF NOT EXISTS medical_system;
 USE medical_system;
 
 -- Create doctors table
 CREATE TABLE IF NOT EXISTS doctors (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
+    username VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
-    specialization VARCHAR(255),
-    registration_date DATETIME DEFAULT CURRENT_TIMESTAMP
+    specialization VARCHAR(255)
 );
 
 -- Create patients table
@@ -21,8 +20,7 @@ CREATE TABLE IF NOT EXISTS patients (
     gender VARCHAR(10),
     contact VARCHAR(20),
     address TEXT,
-    medical_history TEXT,
-    registration_date DATETIME DEFAULT CURRENT_TIMESTAMP
+    medical_history TEXT
 );
 
 -- Create prescriptions table
@@ -33,31 +31,11 @@ CREATE TABLE IF NOT EXISTS prescriptions (
     diagnosis TEXT,
     medicines TEXT,
     notes TEXT,
-    prescription_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    prescription_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id),
+    FOREIGN KEY (patient_id) REFERENCES patients(id)
 );
 
--- Insert sample doctor data (using plain text password)
-INSERT INTO doctors (username, password, full_name, email, specialization)
-VALUES
-('admin', 'admin123', 'Admin Doctor', 'admin@example.com', 'General Medicine')
-ON DUPLICATE KEY UPDATE
-    password = VALUES(password),
-    full_name = VALUES(full_name),
-    email = VALUES(email),
-    specialization = VALUES(specialization);
-
--- Insert sample patient data
-INSERT INTO patients (name, age, gender, contact, address, medical_history)
-VALUES
-('John Doe', 45, 'Male', '9876543210', '123 Main St, City', 'Hypertension, Diabetes'),
-('Jane Smith', 35, 'Female', '8765432109', '456 Park Ave, Town', 'Asthma')
-ON DUPLICATE KEY UPDATE
-    name = VALUES(name);
-
--- Create indexes for better performance
-CREATE INDEX idx_doctor_username ON doctors(username);
-CREATE INDEX idx_patient_name ON patients(name);
-CREATE INDEX idx_prescription_doctor ON prescriptions(doctor_id);
-CREATE INDEX idx_prescription_patient ON prescriptions(patient_id);
+-- Create indexes (may already exist in app.py)
+-- CREATE INDEX idx_doctor_username ON doctors(username);
+-- CREATE INDEX idx_patient_name ON patients(name);
